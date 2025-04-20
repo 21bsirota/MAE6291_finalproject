@@ -52,8 +52,6 @@ def play_song():
     global avg_bpm
     while True:
         # Read last sent BPM measurement
-#         read = ser.readline().decode()
-#         print(read)
         bpm = avg_bpm
         print("BPM is " + str(bpm))
 
@@ -91,7 +89,6 @@ def get_bpm():
     
     while True:
         read = ser.readline().decode()
-#         print(read.strip())
         try:
             read = int(float(read.split()[1]))
         except:
@@ -102,7 +99,6 @@ def get_bpm():
             list.append(read)
         
         avg_bpm = mean(list)
-#         print("Average BPM " + str(avg_bpm))
         
 if __name__ == "__main__":
     t1 = threading.Thread(target=get_bpm)

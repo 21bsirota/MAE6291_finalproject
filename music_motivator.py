@@ -13,6 +13,7 @@ import pandas as pd
 webbrowser.open("https://www.spotify.com")
 
 # Authenticate to Spotify API
+load_dotenv()
 CLIENT_ID = os.environ.get("CLIENT_ID")
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
 sp = spotipy.Spotify(auth_manager = SpotifyOAuth(
@@ -61,4 +62,4 @@ while True:
     sp.next_track()
 
     # Wait 1 minute for next loop
-    time.sleep(60)
+    time.sleep(30)

@@ -15,7 +15,7 @@ webbrowser.open("https://www.spotify.com")
 # Authenticate to Spotify API
 CLIENT_ID = os.environ.get("CLIENT_ID")
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
+sp = spotipy.Spotify(auth_manager = SpotifyOAuth(
     client_id = CLIENT_ID,
     client_secret = CLIENT_SECRET,
     redirect_uri = "http://127.0.0.1:3000",

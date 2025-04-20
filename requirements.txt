@@ -1,0 +1,4 @@
+spotipy
+pyserial
+python-dotenv
+pandas

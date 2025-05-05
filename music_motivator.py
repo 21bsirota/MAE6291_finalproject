@@ -11,44 +11,49 @@ import pandas as pd
 import threading
 from statistics import mean
 
-# Open Spotify in Web Browser
-# webbrowser.open("https://www.spotify.com")
-# print("Opened Spotify In Web Browser")
+SERIAL_PORT = '/dev/ttyACM1'
 
-# Authenticate to Spotify API
-load_dotenv()
-CLIENT_ID = os.environ.get("CLIENT_ID")
-CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
-sp = spotipy.Spotify(auth_manager = SpotifyOAuth(
-    client_id = CLIENT_ID,
-    client_secret = CLIENT_SECRET,
-    redirect_uri = "http://127.0.0.1:3000",
-    scope = "user-read-playback-state user-modify-playback-state"
-))
-print("Authenticated to Spotify")
+def setup():
+    # Open Spotify in Web Browser
+    webbrowser.open("https://www.spotify.com")
+    print("Opened Spotify In Web Browser")
 
-# Wait 10 seconds for Web Browser to finish opening
-# time.sleep(10)
+    # Authenticate to Spotify API
+    load_dotenv()
+    CLIENT_ID = os.environ.get("CLIENT_ID")
+    CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
+    sp = spotipy.Spotify(auth_manager = SpotifyOAuth(
+        client_id = CLIENT_ID,
+        client_secret = CLIENT_SECRET,
+        redirect_uri = "http://127.0.0.1:3000",
+        scope = "user-read-playback-state user-modify-playback-state"
+    ))
+    print("Authenticated to Spotify")
 
-# Search through devices for web player and transfer playback to that device
-for device in sp.devices()['devices']:
-    if "Web Player" in device['name']:
-        sp.transfer_playback(device_id=device['id'], force_play=True)
-        break
-print("Set Active Playback Device")
+    # Wait 10 seconds for Web Browser to finish opening
+    time.sleep(10)
 
-# Initialize Serial Connection to Arduino
-ser = serial.Serial('/dev/ttyACM1', 115200)
-print("Initialized Serial Connection")
+    # Search through devices for web player and transfer playback to that device
+    for device in sp.devices()['devices']:
+        if "Web Player" in device['name']:
+            sp.transfer_playback(device_id=device['id'], force_play=True)
+            break
+    print("Set Active Playback Device")
 
-# Open songs CSV file
-songs = pd.read_csv('songs.csv')
-print("Read Songs File")
+    # Initialize Serial Connection to Arduino
+    ser = serial.Serial(SERIAL_PORT, 115200)
+    print("Initialized Serial Connection")
 
-avg_bpm = 70
+    # Open songs CSV file
+    songs = pd.read_csv('songs.csv')
+    print("Read Songs File")
+
+    avg_bpm = 70
+
+    return sp, songs, ser
 
 # Main execution loop
-def play_song():
+def play_song(sp, songs):
     global avg_bpm
     while True:
         # Read last sent BPM measurement
@@ -77,10 +82,10 @@ def play_song():
         time.sleep(1)
         sp.seek_track(randint(20, 60) * 1000)
 
-        # Wait 1 minute for next loop
+        # Wait 30 seconds for next loop
         time.sleep(30)
 
-def get_bpm():
+def get_bpm(ser):
     global avg_bpm
     
     num_samples = 25
@@ -101,8 +106,17 @@ def get_bpm():
         avg_bpm = mean(list)
         
 if __name__ == "__main__":
-    t1 = threading.Thread(target=get_bpm)
-    t2 = threading.Thread(target=play_song)
+    sp, songs, ser = setup()
+
+    t1 = threading.Thread(target=get_bpm, args=[ser])
+    t2 = threading.Thread(target=play_song, args=[sp, songs])
     
     t1.start()
     t2.start()
+
+    try: 
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        ser.close()
+        print("Exiting Music Motivator")
